@@ -17,13 +17,13 @@ const matches = siteConfig.matches || [];
 
 function makeUserscriptHeader() {
   const matchLines = matches.map(match => `// @match        ${match}`).join('\n');
-  return `// ==UserScript==\n// @name         CAU THEOL 课程资源批量下载\n// @namespace    cau-theol-batch-downloader\n// @version      3.0.0\n// @description  递归扫描 THEOL 课程资源，树状勾选，支持下载 ZIP 或按原目录结构下载到本地文件夹\n${matchLines}\n// @grant        none\n// @run-at       document-end\n// ==/UserScript==\n\n`;
+  return `// ==UserScript==\n// @name         THEOL 课程资源批量下载\n// @namespace    theol-batch-downloader\n// @version      3.0.0\n// @description  递归扫描 THEOL 课程资源，树状勾选，支持下载 ZIP 或按原目录结构下载到本地文件夹\n${matchLines}\n// @grant        none\n// @run-at       document-end\n// ==/UserScript==\n\n`;
 }
 
 function makeChromeManifest() {
   return {
     manifest_version: 3,
-    name: 'CAU THEOL 课程资源批量下载',
+    name: 'THEOL 课程资源批量下载',
     version: '3.0.0',
     description: '递归扫描 THEOL 课程资源，树状勾选，支持下载 ZIP 或按原目录结构下载到本地文件夹',
     content_scripts: [
@@ -42,7 +42,7 @@ function makeFirefoxManifest() {
     ...makeChromeManifest(),
     browser_specific_settings: {
       gecko: {
-        id: 'cau-theol-batch-downloader@local'
+        id: 'theol-batch-downloader@local'
       }
     }
   };
@@ -88,7 +88,7 @@ const userscriptResult = await build({
 });
 const userscriptBody = userscriptResult.outputFiles[0].text;
 await writeFile(
-  path.join(userscriptDir, 'cau-theol-batch-downloader.user.js'),
+  path.join(userscriptDir, 'theol-batch-downloader.user.js'),
   `${makeUserscriptHeader()}${userscriptBody}\n`,
   'utf8'
 );
