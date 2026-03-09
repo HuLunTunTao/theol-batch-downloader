@@ -23,6 +23,13 @@ export function createDownloadActions({
     return { blob, finalName };
   }
 
+  async function blobToZipInput(blob) {
+    const bytes = new Uint8Array(await blob.arrayBuffer());
+    // JSZip uses instanceof checks for ArrayBuffer/Uint8Array, which can fail in Firefox
+    // extension realms. A plain Array survives cross-realm detection.
+    return Array.from(bytes);
+  }
+
   const ZIP_SIZE_WARN_BYTES = 512 * 1024 * 1024;
   const ZIP_COUNT_WARN_THRESHOLD = 400;
 
@@ -280,7 +287,7 @@ export function createDownloadActions({
 
         const { relativePath } = makeUniqueRelativePath(file.pathSegments, finalName, usedRelativePaths);
 
-        zip.file(relativePath, blob);
+        zip.file(relativePath, await blobToZipInput(blob));
         done += 1;
       }
 
