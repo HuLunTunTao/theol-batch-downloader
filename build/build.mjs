@@ -1,5 +1,5 @@
 import { build } from 'esbuild';
-import { mkdir, readFile, rm, writeFile } from 'node:fs/promises';
+import { copyFile, mkdir, readFile, rm, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -10,6 +10,7 @@ const distDir = path.join(rootDir, 'dist');
 const userscriptDir = path.join(distDir, 'userscript');
 const chromeDir = path.join(distDir, 'chrome');
 const firefoxDir = path.join(distDir, 'firefox');
+const logoPath = path.join(rootDir, 'src/assets/logo.png');
 
 const siteConfigPath = path.join(rootDir, 'src/config/sites.json');
 const siteConfig = JSON.parse(await readFile(siteConfigPath, 'utf8'));
@@ -26,6 +27,18 @@ function makeChromeManifest() {
     name: 'THEOL 课程资源批量下载',
     version: '3.0.0',
     description: '递归扫描 THEOL 课程资源，树状勾选，支持下载 ZIP 或按原目录结构下载到本地文件夹',
+    icons: {
+      16: 'logo.png',
+      32: 'logo.png',
+      48: 'logo.png',
+      128: 'logo.png'
+    },
+    action: {
+      default_icon: {
+        16: 'logo.png',
+        32: 'logo.png'
+      }
+    },
     content_scripts: [
       {
         matches,
@@ -76,6 +89,9 @@ await writeFile(
   `${JSON.stringify(makeFirefoxManifest(), null, 2)}\n`,
   'utf8'
 );
+
+await copyFile(logoPath, path.join(chromeDir, 'logo.png'));
+await copyFile(logoPath, path.join(firefoxDir, 'logo.png'));
 
 const userscriptResult = await build({
   entryPoints: [path.join(rootDir, 'src/entries/userscript.js')],

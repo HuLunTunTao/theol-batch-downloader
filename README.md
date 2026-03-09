@@ -1,75 +1,155 @@
 # College Resource Downloader
-# THEOL 资源批量下载器
+# THEOL 课程资源批量下载器
+
+![alt text](src/assets/logo.png)
+
+用于在 THEOL 课程资源页面中批量勾选并下载文件，减少逐个点击下载的重复操作。
 
 项目截图：
 
+![主界面截图 1](./docs/imgs/img0.png)
+![主界面截图 2](./docs/imgs/img1.png)
 
-## 前言
+## 功能特性
+
+- 自动递归扫描当前课程资源目录
+- 树状结构展示，支持按目录批量勾选
+- 支持 `ZIP` 打包下载
+- 支持按原目录结构下载到本地文件夹（浏览器支持时）
+- 自动补全常见文件后缀（基于图标与响应头推断）
+- 下载前自动估算总大小（可估算项）
 
 ## 支持的学校站点
 
-- 中国农业大学在线教育综合平台（cau theol）: https://jx.cau.edu.cn/meol/
+默认匹配规则：
 
-理论上支持所有使用与中国农业大学所使用的theol接近版本搭建的站点，欢迎添加更多站点支持（提issue/PR）
+- `*://*/meol/*`
 
-## 使用方式
+已确认站点：
 
-- 油猴脚本（支持油猴Tampermonkey、脚本猫ScriptCat等脚本加载器）：在release中找到名字类似`theol-batch-downloader-${TAG_NAME}.user.js`的文件
-- Chrome 插件（支持Chrome、Edge、夸克等基于Chroumin的浏览器）：在release中找到名字类似`theol-batch-downloader-chrome-${TAG_NAME}.zip`的文件并拖入浏览器安装
-- Firefox 插件（支持Firefox、zen等基于Firefox的浏览器）：`theol-batch-downloader-firefox-vx.y.z.zip`
+- 中国农业大学在线教育综合平台（CAU THEOL）：`https://jx.cau.edu.cn/meol/`
 
-## 项目维护
+理论上支持使用 CAU THEOL 或相近版本搭建的平台。欢迎提交 issue/PR 补充兼容站点。
 
-如果你发现项目存在bug，或者有值得改进的地方，欢迎提issue或PR，建议使用简体中文
+## 快速使用
 
-特别地，对于支持站点，请关注
-`src/config/sites.json`。
+### 方式 1：油猴脚本（推荐给普通用户）
 
-如果在充分测试站点后认为你的站点可以使用本项目，请添加！
+适用于 Tampermonkey、ScriptCat 等脚本管理器。
 
-注意：由于学校资源平台往往需要学校内部网络环境和账号来访问，项目的其他维护者往往无法测试
+1. 在项目 Releases 下载 `theol-batch-downloader-<version>.user.js`
+2. 用脚本管理器安装脚本
+3. 打开学校 THEOL 的“课程资源”页面
+4. 点击页面上的 `批量下载` 按钮
 
-因此请在充分测试后再提issue/PR
+### 方式 2：Chromium 浏览器扩展
 
-项目优先通过文件的图标来判别其类型，因此，如果您发现图标和映射关系存在问题并想做出改进，请关注：
-`src/config/file-mappings.js`
+适用于 Chrome、Edge、360、夸克等 Chromium 内核浏览器。
 
-## 项目结构
+1. 在 Releases 下载 `theol-batch-downloader-chrome-<version>.zip`
+2. 解压后进入浏览器扩展管理页面
+3. 打开“开发者模式”
+4. 选择“加载已解压的扩展程序”，指向解压目录
 
-- `src/core/app.js`：应用编排入口（状态管理、初始化、流程串联）
-- `src/core/context/resource-context.js`：页面上下文探测（主页面/iframe 资源列表定位）
-- `src/core/tree/tree-model.js`：资源树扫描与树状态逻辑（递归构建、勾选联动、统计）
-- `src/core/ui/style.js`：样式注入
-- `src/core/ui/template.js`：面板模板
-- `src/core/ui/panel.js`：面板渲染与交互
-- `src/core/download/actions.js`：下载行为（ZIP/目录下载/大小预估）
-- `src/core/shared/helpers.js`：通用工具函数（命名清洗、后缀推断、HTML 转义等）
-- `src/core/shared/constants.js`：全局常量（按钮/弹层/样式 id）
-- `src/config/file-mappings.js`：图标名与文件后缀、MIME 与后缀映射
-- `src/config/sites.json`：启用站点列表（userscript 与 extension 复用）
-- `src/config/sites.js`：站点匹配判断工具
-- `src/entries/userscript.js`：油猴入口
-- `src/entries/content-script.js`：浏览器插件 content script 入口
-- `build/build.mjs`：统一打包脚本（自动生成 userscript header 与两个 manifest）
+### 方式 3：Firefox 浏览器扩展
 
-## 构建
+适用于 Firefox / Zen 等。
 
-在项目目录下执行
+1. 在 Releases 下载 `theol-batch-downloader-firefox-<version>.zip`
+2. 通过临时加载或打包签名方式安装（取决于你的浏览器策略）
+
+## 使用流程
+
+1. 进入课程的“课程资源”列表页
+2. 点击页面右上区域出现的 `批量下载` 按钮
+3. 等待脚本扫描资源树
+4. 勾选需要下载的目录/文件
+5. 选择下载方式：
+   - `下载压缩包 ZIP`
+   - `下载到本地文件夹`
+
+说明：
+
+- 若浏览器不支持 `showDirectoryPicker`，`下载到本地文件夹` 会自动回退为逐个下载任务。
+
+## 项目原理与边界
+
+本项目通过页面可见 DOM 结构解析课程资源列表，并以当前登录会话发起同源请求下载文件。
+
+- 不包含逆向破解、绕过鉴权、提权或脱库逻辑
+- 不绕过学校平台的访问控制
+- 仅在你已具备访问权限的资源范围内工作
+
+请遵守学校与课程相关规定，仅用于合法、合规、授权范围内的学习活动。
+
+## 常见问题
+
+### 1）按钮没有出现
+
+- 请确认当前页面是 THEOL 的“课程资源”列表页
+- 某些学校主题改版后，按钮注入位置可能变化，可提 issue 附页面截图
+
+### 2）扫描不到文件
+
+- 可能当前页面并非资源列表 iframe 的实际内容页
+- 尝试先手动进入具体资源目录后再点击 `批量下载`
+
+### 3）部分文件后缀异常
+
+- 可在 `src/config/file-mappings.js` 增补图标名与后缀映射
+
+### 4）站点无法匹配
+
+- 可在 `src/config/sites.json` 添加你的站点匹配规则
+
+## 本地开发与构建
+
+环境要求：
+
+- Node.js 18+
+- npm
+
+安装依赖并构建：
+
 ```bash
 npm install
 npm run build
 ```
 
-构建后目录：
+构建产物：
 
-- `dist/userscript/cau-theol-batch-downloader.user.js`
+- `dist/userscript/theol-batch-downloader.user.js`
 - `dist/chrome/manifest.json`
 - `dist/chrome/content-script.js`
 - `dist/firefox/manifest.json`
 - `dist/firefox/content-script.js`
 
+## 关键配置
 
+- `src/config/sites.json`：站点匹配规则（userscript 与 extension 共用）
+- `src/config/file-mappings.js`：图标名 / MIME 与后缀映射
 
-## 第三方依赖与合规
+## 项目结构
 
-- 第三方许可证声明见 `THIRD_PARTY_NOTICES.md`。
+- `src/core/app.js`：应用入口与流程编排
+- `src/core/context/resource-context.js`：页面上下文探测（主页面/iframe）
+- `src/core/tree/tree-model.js`：资源树扫描与勾选联动
+- `src/core/ui/template.js`：面板模板
+- `src/core/ui/panel.js`：面板渲染与交互
+- `src/core/ui/style.js`：样式注入
+- `src/core/download/actions.js`：下载逻辑（ZIP / 文件夹）
+- `src/core/shared/helpers.js`：工具函数
+- `src/core/shared/constants.js`：全局常量
+- `src/entries/userscript.js`：油猴入口
+- `src/entries/content-script.js`：扩展入口
+- `build/build.mjs`：打包脚本（userscript + chrome/firefox 清单）
+
+## 维护与贡献
+
+欢迎 issue / PR（建议简体中文）。
+
+提交站点兼容相关改动前，请先在目标站点完整自测后再提交。由于学校平台访问通常受校园网络和账号限制，维护者可能无法直接复现你的环境。
+
+## 第三方依赖与许可证
+
+- 第三方许可证声明：`THIRD_PARTY_NOTICES.md`
