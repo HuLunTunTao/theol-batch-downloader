@@ -11,9 +11,9 @@ import {
 } from './shared/helpers';
 import {
   buildTreeFromCurrentPage,
-  countFolders,
   getAllFiles,
   getSelectedFiles,
+  getTreeSummary,
   refreshAncestors,
   setNodeStateDeep,
   walkTree
@@ -39,9 +39,7 @@ export function runBatchDownloader() {
     setNodeStateDeep,
     refreshAncestors,
     walkTree,
-    getAllFiles,
-    getSelectedFiles,
-    countFolders,
+    getTreeSummary,
     getExtFromIconClass,
     escapeHTML,
     isActionInProgress: () => actionInProgress,
@@ -99,7 +97,11 @@ export function runBatchDownloader() {
       panelController.syncCheckboxDOM(rootTree);
 
       const files = getAllFiles(rootTree);
-      panelController.updateProgress(`扫描完成：发现 ${files.length} 个文件。`, 100);
+      const scanErrorCount = Array.isArray(rootTree.scanErrors) ? rootTree.scanErrors.length : 0;
+      const summaryText = scanErrorCount > 0
+        ? `扫描完成：发现 ${files.length} 个文件，另有 ${scanErrorCount} 个目录扫描失败。`
+        : `扫描完成：发现 ${files.length} 个文件。`;
+      panelController.updateProgress(summaryText, 100);
     } catch (err) {
       console.error(err);
       panelController.showScanError(err.message || String(err));
@@ -140,8 +142,32 @@ export function runBatchDownloader() {
   }
 
   function init() {
-    injectButton();
-    setInterval(injectButton, 1500);
+    let scheduled = false;
+    const scheduleInject = () => {
+      if (scheduled) return;
+      scheduled = true;
+      requestAnimationFrame(() => {
+        scheduled = false;
+        injectButton();
+      });
+    };
+
+    const observedDocs = [document];
+    if (uiDocument !== document) observedDocs.push(uiDocument);
+
+    for (const doc of observedDocs) {
+      doc.addEventListener('readystatechange', scheduleInject, true);
+      doc.addEventListener('load', scheduleInject, true);
+      const root = doc.documentElement;
+      if (root) {
+        const observer = new MutationObserver(scheduleInject);
+        observer.observe(root, { childList: true, subtree: true });
+      }
+    }
+
+    window.addEventListener('hashchange', scheduleInject, true);
+    window.addEventListener('popstate', scheduleInject, true);
+    scheduleInject();
   }
 
   init();

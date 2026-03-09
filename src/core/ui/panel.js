@@ -8,9 +8,7 @@ export function createPanelController({
   setNodeStateDeep,
   refreshAncestors,
   walkTree,
-  getAllFiles,
-  getSelectedFiles,
-  countFolders,
+  getTreeSummary,
   getExtFromIconClass,
   escapeHTML,
   isActionInProgress,
@@ -32,15 +30,14 @@ export function createPanelController({
   }
 
   function updateSummary(root) {
-    const allFiles = getAllFiles(root);
-    const selectedFiles = getSelectedFiles(root);
+    const summary = getTreeSummary(root);
     const summaryEl = uiDocument.querySelector(`#${OVERLAY_ID} .theol-summary`);
     if (!summaryEl) return;
 
     summaryEl.innerHTML = `
-      <span class="theol-tag">目录 ${countFolders(root) - 1}</span>
-      <span class="theol-tag">文件 ${allFiles.length}</span>
-      <span class="theol-tag">已选 ${selectedFiles.length}</span>
+      <span class="theol-tag">目录 ${Math.max(0, summary.folders - 1)}</span>
+      <span class="theol-tag">文件 ${summary.files}</span>
+      <span class="theol-tag">已选 ${summary.selectedFiles}</span>
     `;
   }
 
@@ -124,7 +121,7 @@ export function createPanelController({
     const meta = uiDocument.createElement('span');
     meta.className = 'theol-meta';
     meta.textContent = node.type === 'folder'
-      ? `${node.children.length} 项`
+      ? (node.scanError ? '扫描失败' : `${node.children.length} 项`)
       : (getExtFromIconClass(node.iconClass) || '');
 
     row.appendChild(toggle);

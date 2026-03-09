@@ -23,6 +23,62 @@ export function createDownloadActions({
     return { blob, finalName };
   }
 
+  const ZIP_SIZE_WARN_BYTES = 512 * 1024 * 1024;
+  const ZIP_COUNT_WARN_THRESHOLD = 400;
+
+  function splitFilename(name) {
+    const match = /^(.*?)(\.[^.]+)?$/.exec(String(name || '').trim());
+    return {
+      base: (match && match[1]) || '未命名',
+      ext: (match && match[2]) || ''
+    };
+  }
+
+  function makeUniqueRelativePath(pathSegments, fileName, usedRelativePaths) {
+    const safeSegments = pathSegments.map(segment => sanitizeName(segment)).filter(Boolean);
+    const safeName = sanitizeName(fileName) || 'download.bin';
+    const { base, ext } = splitFilename(safeName);
+
+    let suffix = 0;
+    while (true) {
+      const candidateName = suffix === 0 ? `${base}${ext}` : `${base} (${suffix + 1})${ext}`;
+      const candidatePath = [...safeSegments, candidateName].join('/');
+      if (!usedRelativePaths.has(candidatePath)) {
+        usedRelativePaths.add(candidatePath);
+        return {
+          relativePath: candidatePath,
+          pathSegments: safeSegments,
+          fileName: candidateName
+        };
+      }
+      suffix += 1;
+    }
+  }
+
+  async function fileExistsInDirectory(dirHandle, fileName) {
+    try {
+      await dirHandle.getFileHandle(fileName);
+      return true;
+    } catch (error) {
+      if (error && error.name === 'NotFoundError') return false;
+      throw error;
+    }
+  }
+
+  async function makeAvailableFileName(dirHandle, fileName) {
+    const safeName = sanitizeName(fileName) || 'download.bin';
+    const { base, ext } = splitFilename(safeName);
+
+    let suffix = 0;
+    while (true) {
+      const candidate = suffix === 0 ? `${base}${ext}` : `${base} (${suffix + 1})${ext}`;
+      if (!(await fileExistsInDirectory(dirHandle, candidate))) {
+        return candidate;
+      }
+      suffix += 1;
+    }
+  }
+
   function parseSizeFromHeaders(headers) {
     const contentRange = headers.get('content-range') || '';
     const match = contentRange.match(/\/(\d+)\s*$/);
@@ -59,6 +115,19 @@ export function createDownloadActions({
         }
       });
       if (!rangeRes.ok) return null;
+
+      const hasContentRange = !!rangeRes.headers.get('content-range');
+      if (rangeRes.status !== 206 && !hasContentRange) {
+        if (rangeRes.body) {
+          try {
+            await rangeRes.body.cancel();
+          } catch {
+            // ignore stream cancel errors
+          }
+        }
+        return null;
+      }
+
       const size = parseSizeFromHeaders(rangeRes.headers);
       if (rangeRes.body) {
         try {
@@ -103,21 +172,45 @@ export function createDownloadActions({
       ? uiDocument.defaultView.confirm.bind(uiDocument.defaultView)
       : window.confirm.bind(window);
 
-    return confirmFn(`确认开始下载？\n\n${countText}\n${sizeText}`);
+    return {
+      ok: confirmFn(`确认开始下载？\n\n${countText}\n${sizeText}`),
+      knownTotalBytes,
+      unknownCount
+    };
+  }
+
+  function shouldWarnZipRisk(selectedFiles, knownTotalBytes, unknownCount) {
+    return knownTotalBytes >= ZIP_SIZE_WARN_BYTES
+      || selectedFiles.length >= ZIP_COUNT_WARN_THRESHOLD
+      || unknownCount > 0;
+  }
+
+  function confirmZipRisk(selectedFiles, knownTotalBytes, unknownCount) {
+    const confirmFn = (uiDocument.defaultView && uiDocument.defaultView.confirm)
+      ? uiDocument.defaultView.confirm.bind(uiDocument.defaultView)
+      : window.confirm.bind(window);
+
+    const reasonText = knownTotalBytes >= ZIP_SIZE_WARN_BYTES
+      ? `已知数据量约 ${fileSizeText(knownTotalBytes)}`
+      : unknownCount > 0
+        ? `有 ${unknownCount} 个文件大小未知`
+        : `文件数量达到 ${selectedFiles.length} 个`;
+
+    return confirmFn(
+      `ZIP 打包可能占用较高内存并导致页面卡顿或失败。\n\n${reasonText}\n建议优先使用“下载到本地文件夹”。\n\n是否仍继续 ZIP 下载？`
+    );
   }
 
   async function fallbackFlatDownload(selectedFiles) {
     let done = 0;
+    const usedRelativePaths = new Set();
     for (const file of selectedFiles) {
       updateProgress(`下载中：${file.name}（${done + 1}/${selectedFiles.length}）`, (done / selectedFiles.length) * 100);
       const { blob, finalName } = await fetchFileBlobAndName(file);
-      const nestedDownloadName = [...file.pathSegments, finalName]
-        .map(seg => sanitizeName(seg))
-        .filter(Boolean)
-        .join('/');
+      const { relativePath } = makeUniqueRelativePath(file.pathSegments, finalName, usedRelativePaths);
       const anchor = document.createElement('a');
       anchor.href = URL.createObjectURL(blob);
-      anchor.download = nestedDownloadName || sanitizeName(finalName) || 'download.bin';
+      anchor.download = relativePath || sanitizeName(finalName) || 'download.bin';
       document.body.appendChild(anchor);
       anchor.click();
       anchor.remove();
@@ -137,7 +230,8 @@ export function createDownloadActions({
     for (const segment of pathSegments) {
       dir = await getOrCreateSubdir(dir, segment);
     }
-    const fileHandle = await dir.getFileHandle(sanitizeName(fileName), { create: true });
+    const availableFileName = await makeAvailableFileName(dir, fileName);
+    const fileHandle = await dir.getFileHandle(availableFileName, { create: true });
     const writable = await fileHandle.createWritable();
     await writable.write(blob);
     await writable.close();
@@ -155,10 +249,18 @@ export function createDownloadActions({
       return;
     }
 
-    const ok = await confirmBeforeDownload(selectedFiles);
-    if (!ok) {
+    const confirmation = await confirmBeforeDownload(selectedFiles);
+    if (!confirmation.ok) {
       updateProgress('已取消。', 0);
       return;
+    }
+
+    if (shouldWarnZipRisk(selectedFiles, confirmation.knownTotalBytes, confirmation.unknownCount)) {
+      const confirmed = confirmZipRisk(selectedFiles, confirmation.knownTotalBytes, confirmation.unknownCount);
+      if (!confirmed) {
+        updateProgress('已取消。', 0);
+        return;
+      }
     }
 
     setActionInProgress(true);
@@ -169,15 +271,14 @@ export function createDownloadActions({
       const zip = new JSZip();
       let done = 0;
       let totalBytes = 0;
+      const usedRelativePaths = new Set();
 
       for (const file of selectedFiles) {
         updateProgress(`下载中：${file.name}（${done + 1}/${selectedFiles.length}）`, (done / selectedFiles.length) * 100);
         const { blob, finalName } = await fetchFileBlobAndName(file);
         totalBytes += blob.size || 0;
 
-        const relativePath = [...file.pathSegments, finalName]
-          .map(sanitizeName)
-          .join('/');
+        const { relativePath } = makeUniqueRelativePath(file.pathSegments, finalName, usedRelativePaths);
 
         zip.file(relativePath, blob);
         done += 1;
@@ -221,8 +322,8 @@ export function createDownloadActions({
       return;
     }
 
-    const ok = await confirmBeforeDownload(selectedFiles);
-    if (!ok) {
+    const confirmation = await confirmBeforeDownload(selectedFiles);
+    if (!confirmation.ok) {
       updateProgress('已取消。', 0);
       return;
     }
@@ -244,12 +345,14 @@ export function createDownloadActions({
 
       let done = 0;
       let totalBytes = 0;
+      const usedRelativePaths = new Set();
 
       for (const file of selectedFiles) {
         updateProgress(`下载并写入：${file.name}（${done + 1}/${selectedFiles.length}）`, (done / selectedFiles.length) * 100);
         const { blob, finalName } = await fetchFileBlobAndName(file);
         totalBytes += blob.size || 0;
-        await writeBlobToFileSystem(dirHandle, file.pathSegments, finalName, blob);
+        const uniqueTarget = makeUniqueRelativePath(file.pathSegments, finalName, usedRelativePaths);
+        await writeBlobToFileSystem(dirHandle, uniqueTarget.pathSegments, uniqueTarget.fileName, blob);
         done += 1;
       }
 
