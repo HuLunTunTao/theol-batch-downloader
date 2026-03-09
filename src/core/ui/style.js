@@ -4,6 +4,8 @@ function buildStyleText() {
   return `
       #${BUTTON_ID} {
         margin-left: 10px;
+        position: relative;
+        top: -5px;
         padding: 6px 16px;
         border: none;
         border-radius: 8px;
