@@ -1,4 +1,4 @@
-# College Resource Downloader
+# THEOL Batch Downloader
 # THEOL 课程资源批量下载器
 
 ![alt text](src/assets/logo.png)
@@ -7,8 +7,8 @@
 
 项目截图：
 
-![主界面截图 1](./docs/imgs/img0.png)
-![主界面截图 2](./docs/imgs/img1.png)
+![项目截图](docs/imgs/screenshot0.png)
+![项目截图](docs/imgs/screenshot1.png)
 
 ## 功能特性
 
@@ -31,18 +31,14 @@
 
 理论上支持使用 CAU THEOL 或相近版本搭建的平台。欢迎提交 issue/PR 补充兼容站点。
 
+THEOL的截图如下，你可以根据UI来推断你所使用的THEOL版本是否与CAU THEOL接近：
+
+![THEOL的截图 1](./docs/imgs/img0.png)
+![THEOL的截图 2](./docs/imgs/img1.png)
+
 ## 快速使用
 
-### 方式 1：油猴脚本（推荐给普通用户）
-
-适用于 Tampermonkey、ScriptCat 等脚本管理器。
-
-1. 在项目 Releases 下载 `theol-batch-downloader-<version>.user.js`
-2. 用脚本管理器安装脚本
-3. 打开学校 THEOL 的“课程资源”页面
-4. 点击页面上的 `批量下载` 按钮
-
-### 方式 2：Chromium 浏览器扩展
+### 方式 1：Chromium 浏览器扩展
 
 适用于 Chrome、Edge、360、夸克等 Chromium 内核浏览器。
 
@@ -51,12 +47,21 @@
 3. 打开“开发者模式”
 4. 选择“加载已解压的扩展程序”，指向解压目录
 
-### 方式 3：Firefox 浏览器扩展
+### 方式 2：Firefox 浏览器扩展
 
 适用于 Firefox / Zen 等。
 
 1. 在 Releases 下载 `theol-batch-downloader-firefox-<version>.zip`
 2. 通过临时加载或打包签名方式安装（取决于你的浏览器策略）
+
+### 方式 3：油猴脚本（推荐给专业用户😎）
+
+适用于 Tampermonkey、ScriptCat 等脚本管理器。
+
+1. 在项目 Releases 下载 `theol-batch-downloader-<version>.user.js`
+2. 用脚本管理器安装脚本
+3. 打开学校 THEOL 的“课程资源”页面
+4. 点击页面上的 `批量下载` 按钮
 
 ## 使用流程
 
@@ -96,7 +101,8 @@
 
 ### 3）部分文件后缀异常
 
-- 可在 `src/config/file-mappings.js` 增补图标名与后缀映射
+项目通过THEOL给文件匹配的图标名来初步匹配其文件类型，若有问题
+可在 `src/config/file-mappings.js` 增补图标名与后缀映射
 
 ### 4）站点无法匹配
 
