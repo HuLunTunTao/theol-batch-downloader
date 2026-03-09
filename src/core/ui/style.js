@@ -43,7 +43,7 @@ function buildStyleText() {
         backdrop-filter: blur(2px);
       }
 
-      #${OVERLAY_ID} .cau-modal {
+      #${OVERLAY_ID} .theol-modal {
         width: min(1080px, 96vw);
         height: min(84vh, 900px);
         background: #fff;
@@ -55,33 +55,33 @@ function buildStyleText() {
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
       }
 
-      #${OVERLAY_ID} .cau-header {
+      #${OVERLAY_ID} .theol-header {
         padding: 18px 22px 14px;
         background: linear-gradient(135deg, #f7faff, #eef4ff);
         border-bottom: 1px solid #e8eef7;
       }
 
-      #${OVERLAY_ID} .cau-title-row {
+      #${OVERLAY_ID} .theol-title-row {
         display: flex;
         align-items: center;
         justify-content: space-between;
         gap: 12px;
       }
 
-      #${OVERLAY_ID} .cau-title {
+      #${OVERLAY_ID} .theol-title {
         font-size: 20px;
         font-weight: 700;
         color: #1f2d3d;
         margin: 0;
       }
 
-      #${OVERLAY_ID} .cau-subtitle {
+      #${OVERLAY_ID} .theol-subtitle {
         margin-top: 6px;
         font-size: 13px;
         color: #667085;
       }
 
-      #${OVERLAY_ID} .cau-close {
+      #${OVERLAY_ID} .theol-close {
         border: none;
         background: #fff;
         width: 36px;
@@ -93,7 +93,7 @@ function buildStyleText() {
         box-shadow: 0 2px 8px rgba(31,45,61,.08);
       }
 
-      #${OVERLAY_ID} .cau-toolbar {
+      #${OVERLAY_ID} .theol-toolbar {
         display: flex;
         flex-wrap: wrap;
         align-items: center;
@@ -103,19 +103,19 @@ function buildStyleText() {
         background: #fff;
       }
 
-      #${OVERLAY_ID} .cau-toolbar .left,
-      #${OVERLAY_ID} .cau-toolbar .right {
+      #${OVERLAY_ID} .theol-toolbar .left,
+      #${OVERLAY_ID} .theol-toolbar .right {
         display: flex;
         flex-wrap: wrap;
         gap: 10px;
         align-items: center;
       }
 
-      #${OVERLAY_ID} .cau-toolbar .left {
+      #${OVERLAY_ID} .theol-toolbar .left {
         flex: 1;
       }
 
-      #${OVERLAY_ID} .cau-btn {
+      #${OVERLAY_ID} .theol-btn {
         border: none;
         border-radius: 10px;
         padding: 9px 14px;
@@ -125,37 +125,37 @@ function buildStyleText() {
         transition: .18s ease;
       }
 
-      #${OVERLAY_ID} .cau-btn.primary {
+      #${OVERLAY_ID} .theol-btn.primary {
         color: #fff;
         background: linear-gradient(135deg, #4f8cff, #3a6ff7);
         box-shadow: 0 6px 14px rgba(58,111,247,.24);
       }
 
-      #${OVERLAY_ID} .cau-btn.primary:hover {
+      #${OVERLAY_ID} .theol-btn.primary:hover {
         transform: translateY(-1px);
       }
 
-      #${OVERLAY_ID} .cau-btn.secondary {
+      #${OVERLAY_ID} .theol-btn.secondary {
         color: #344054;
         background: #f5f7fb;
       }
 
-      #${OVERLAY_ID} .cau-btn.secondary:hover {
+      #${OVERLAY_ID} .theol-btn.secondary:hover {
         background: #edf2fa;
       }
 
-      #${OVERLAY_ID} .cau-btn.ghost {
+      #${OVERLAY_ID} .theol-btn.ghost {
         color: #3a6ff7;
         background: #eef4ff;
       }
 
-      #${OVERLAY_ID} .cau-btn[disabled] {
+      #${OVERLAY_ID} .theol-btn[disabled] {
         opacity: .6;
         cursor: not-allowed;
         transform: none !important;
       }
 
-      #${OVERLAY_ID} .cau-summary {
+      #${OVERLAY_ID} .theol-summary {
         display: flex;
         gap: 14px;
         align-items: center;
@@ -164,7 +164,7 @@ function buildStyleText() {
         color: #475467;
       }
 
-      #${OVERLAY_ID} .cau-tag {
+      #${OVERLAY_ID} .theol-tag {
         padding: 4px 10px;
         border-radius: 999px;
         background: #f2f6ff;
@@ -172,7 +172,7 @@ function buildStyleText() {
         font-weight: 600;
       }
 
-      #${OVERLAY_ID} .cau-body {
+      #${OVERLAY_ID} .theol-body {
         flex: 1;
         min-height: 0;
         overflow: auto;
@@ -182,26 +182,26 @@ function buildStyleText() {
         padding: 16px 20px 20px;
       }
 
-      #${OVERLAY_ID} .cau-tree {
+      #${OVERLAY_ID} .theol-tree {
         font-size: 14px;
         color: #1f2937;
       }
 
-      #${OVERLAY_ID} .cau-tree ul {
+      #${OVERLAY_ID} .theol-tree ul {
         list-style: none;
         margin: 0;
         padding-left: 22px;
       }
 
-      #${OVERLAY_ID} .cau-tree > ul {
+      #${OVERLAY_ID} .theol-tree > ul {
         padding-left: 0;
       }
 
-      #${OVERLAY_ID} .cau-tree li {
+      #${OVERLAY_ID} .theol-tree li {
         margin: 4px 0;
       }
 
-      #${OVERLAY_ID} .cau-node-row {
+      #${OVERLAY_ID} .theol-node-row {
         display: flex;
         align-items: center;
         gap: 8px;
@@ -211,11 +211,11 @@ function buildStyleText() {
         transition: background .15s ease;
       }
 
-      #${OVERLAY_ID} .cau-node-row:hover {
+      #${OVERLAY_ID} .theol-node-row:hover {
         background: #f6f9ff;
       }
 
-      #${OVERLAY_ID} .cau-toggle {
+      #${OVERLAY_ID} .theol-toggle {
         width: 18px;
         height: 18px;
         border: none;
@@ -226,56 +226,56 @@ function buildStyleText() {
         border-radius: 6px;
       }
 
-      #${OVERLAY_ID} .cau-toggle:hover {
+      #${OVERLAY_ID} .theol-toggle:hover {
         background: #edf2fa;
       }
 
-      #${OVERLAY_ID} .cau-toggle.placeholder {
+      #${OVERLAY_ID} .theol-toggle.placeholder {
         visibility: hidden;
         cursor: default;
       }
 
-      #${OVERLAY_ID} .cau-node-row input[type="checkbox"] {
+      #${OVERLAY_ID} .theol-node-row input[type="checkbox"] {
         width: 16px;
         height: 16px;
         cursor: pointer;
       }
 
-      #${OVERLAY_ID} .cau-icon {
+      #${OVERLAY_ID} .theol-icon {
         width: 18px;
         text-align: center;
         user-select: none;
       }
 
-      #${OVERLAY_ID} .cau-name {
+      #${OVERLAY_ID} .theol-name {
         flex: 1;
         min-width: 0;
         word-break: break-all;
       }
 
-      #${OVERLAY_ID} .cau-meta {
+      #${OVERLAY_ID} .theol-meta {
         font-size: 12px;
         color: #98a2b3;
         white-space: nowrap;
       }
 
-      #${OVERLAY_ID} .cau-folder > .cau-node-row .cau-name {
+      #${OVERLAY_ID} .theol-folder > .theol-node-row .theol-name {
         font-weight: 600;
       }
 
-      #${OVERLAY_ID} .cau-footer {
+      #${OVERLAY_ID} .theol-footer {
         padding: 14px 20px 18px;
         border-top: 1px solid #eef2f7;
         background: #fcfdff;
       }
 
-      #${OVERLAY_ID} .cau-progress-text {
+      #${OVERLAY_ID} .theol-progress-text {
         font-size: 13px;
         color: #475467;
         margin-bottom: 8px;
       }
 
-      #${OVERLAY_ID} .cau-progress {
+      #${OVERLAY_ID} .theol-progress {
         width: 100%;
         height: 10px;
         border-radius: 999px;
@@ -283,32 +283,32 @@ function buildStyleText() {
         overflow: hidden;
       }
 
-      #${OVERLAY_ID} .cau-progress-bar {
+      #${OVERLAY_ID} .theol-progress-bar {
         height: 100%;
         width: 0%;
         background: linear-gradient(90deg, #4f8cff, #3a6ff7);
         transition: width .18s ease;
       }
 
-      #${OVERLAY_ID} .cau-empty {
+      #${OVERLAY_ID} .theol-empty {
         color: #667085;
         text-align: center;
         padding: 36px 12px;
       }
 
       @media (max-width: 720px) {
-        #${OVERLAY_ID} .cau-modal {
+        #${OVERLAY_ID} .theol-modal {
           width: 100%;
           height: 92vh;
           border-radius: 14px;
         }
-        #${OVERLAY_ID} .cau-toolbar {
+        #${OVERLAY_ID} .theol-toolbar {
           padding: 12px 14px;
         }
-        #${OVERLAY_ID} .cau-body {
+        #${OVERLAY_ID} .theol-body {
           padding: 12px 14px 14px;
         }
-        #${OVERLAY_ID} .cau-footer {
+        #${OVERLAY_ID} .theol-footer {
           padding: 12px 14px 14px;
         }
       }

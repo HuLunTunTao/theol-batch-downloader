@@ -23,8 +23,8 @@ export function createPanelController({
   }
 
   function updateProgress(text, percent = 0) {
-    const textEl = uiDocument.querySelector(`#${OVERLAY_ID} .cau-progress-text`);
-    const barEl = uiDocument.querySelector(`#${OVERLAY_ID} .cau-progress-bar`);
+    const textEl = uiDocument.querySelector(`#${OVERLAY_ID} .theol-progress-text`);
+    const barEl = uiDocument.querySelector(`#${OVERLAY_ID} .theol-progress-bar`);
     if (textEl) textEl.textContent = text;
     if (barEl) barEl.style.width = `${Math.max(0, Math.min(100, percent))}%`;
   }
@@ -32,20 +32,20 @@ export function createPanelController({
   function updateSummary(root) {
     const allFiles = getAllFiles(root);
     const selectedFiles = getSelectedFiles(root);
-    const summaryEl = uiDocument.querySelector(`#${OVERLAY_ID} .cau-summary`);
+    const summaryEl = uiDocument.querySelector(`#${OVERLAY_ID} .theol-summary`);
     if (!summaryEl) return;
 
     summaryEl.innerHTML = `
-      <span class="cau-tag">目录 ${countFolders(root) - 1}</span>
-      <span class="cau-tag">文件 ${allFiles.length}</span>
-      <span class="cau-tag">已选 ${selectedFiles.length}</span>
+      <span class="theol-tag">目录 ${countFolders(root) - 1}</span>
+      <span class="theol-tag">文件 ${allFiles.length}</span>
+      <span class="theol-tag">已选 ${selectedFiles.length}</span>
     `;
   }
 
   function syncCheckboxDOM(node) {
     if (!node || !node.el) return;
 
-    const checkbox = node.el.querySelector(':scope > .cau-node-row input[type="checkbox"]');
+    const checkbox = node.el.querySelector(':scope > .theol-node-row input[type="checkbox"]');
     if (checkbox) {
       checkbox.checked = !!node.checked;
       checkbox.indeterminate = !!node.indeterminate;
@@ -57,7 +57,7 @@ export function createPanelController({
         childrenWrap.style.display = node.expanded ? '' : 'none';
       }
 
-      const toggle = node.el.querySelector(':scope > .cau-node-row .cau-toggle');
+      const toggle = node.el.querySelector(':scope > .theol-node-row .theol-toggle');
       if (toggle && !toggle.classList.contains('placeholder')) {
         toggle.textContent = node.expanded ? '▼' : '▶';
       }
@@ -76,15 +76,15 @@ export function createPanelController({
 
   function createNodeElement(node) {
     const li = uiDocument.createElement('li');
-    li.className = node.type === 'folder' ? 'cau-folder' : 'cau-file';
+    li.className = node.type === 'folder' ? 'theol-folder' : 'theol-file';
     node.el = li;
 
     const row = uiDocument.createElement('div');
-    row.className = 'cau-node-row';
+    row.className = 'theol-node-row';
 
     const toggle = uiDocument.createElement('button');
     toggle.type = 'button';
-    toggle.className = 'cau-toggle';
+    toggle.className = 'theol-toggle';
     if (node.type === 'folder' && node.children.length > 0) {
       toggle.textContent = node.expanded ? '▼' : '▶';
       toggle.addEventListener('click', () => {
@@ -112,15 +112,15 @@ export function createPanelController({
     });
 
     const icon = uiDocument.createElement('span');
-    icon.className = 'cau-icon';
+    icon.className = 'theol-icon';
     icon.textContent = node.type === 'folder' ? '📁' : '📄';
 
     const name = uiDocument.createElement('span');
-    name.className = 'cau-name';
+    name.className = 'theol-name';
     name.innerHTML = escapeHTML(node.name);
 
     const meta = uiDocument.createElement('span');
-    meta.className = 'cau-meta';
+    meta.className = 'theol-meta';
     meta.textContent = node.type === 'folder'
       ? `${node.children.length} 项`
       : (getExtFromIconClass(node.iconClass) || '');
@@ -145,12 +145,12 @@ export function createPanelController({
   }
 
   function renderTree(root) {
-    const treeContainer = uiDocument.querySelector(`#${OVERLAY_ID} .cau-tree`);
+    const treeContainer = uiDocument.querySelector(`#${OVERLAY_ID} .theol-tree`);
     if (!treeContainer) return;
 
     treeContainer.innerHTML = '';
     if (!root.children.length) {
-      treeContainer.innerHTML = '<div class="cau-empty">未扫描到任何资源。</div>';
+      treeContainer.innerHTML = '<div class="theol-empty">未扫描到任何资源。</div>';
       return;
     }
 
@@ -170,7 +170,7 @@ export function createPanelController({
     overlay.id = OVERLAY_ID;
     overlay.innerHTML = OVERLAY_TEMPLATE_HTML;
 
-    overlay.querySelector('.cau-close').addEventListener('click', () => {
+    overlay.querySelector('.theol-close').addEventListener('click', () => {
       if (isActionInProgress()) return;
       removeOverlay();
     });
@@ -226,16 +226,16 @@ export function createPanelController({
   }
 
   function setActionButtonsDisabled(disabled) {
-    const buttons = uiDocument.querySelectorAll(`#${OVERLAY_ID} .cau-btn, #${OVERLAY_ID} .cau-close`);
+    const buttons = uiDocument.querySelectorAll(`#${OVERLAY_ID} .theol-btn, #${OVERLAY_ID} .theol-close`);
     buttons.forEach(button => {
       button.disabled = disabled;
     });
   }
 
   function showScanError(errorText) {
-    const tree = uiDocument.querySelector(`#${OVERLAY_ID} .cau-tree`);
+    const tree = uiDocument.querySelector(`#${OVERLAY_ID} .theol-tree`);
     if (!tree) return;
-    tree.innerHTML = `<div class="cau-empty">扫描失败：${escapeHTML(errorText)}</div>`;
+    tree.innerHTML = `<div class="theol-empty">扫描失败：${escapeHTML(errorText)}</div>`;
   }
 
   return {
