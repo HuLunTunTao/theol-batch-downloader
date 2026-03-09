@@ -46,13 +46,23 @@ function makeChromeManifest() {
         run_at: 'document_end'
       }
     ],
+    background: {
+      service_worker: 'background.js'
+    },
+    permissions: ['downloads'],
     host_permissions: matches
   };
 }
 
 function makeFirefoxManifest() {
+  const chromeLikeManifest = makeChromeManifest();
+  const { background, ...rest } = chromeLikeManifest;
+
   return {
-    ...makeChromeManifest(),
+    ...rest,
+    background: {
+      scripts: ['background.js']
+    },
     browser_specific_settings: {
       gecko: {
         id: 'theol-batch-downloader@local'
@@ -75,8 +85,20 @@ await build({
   logLevel: 'info'
 });
 
+await build({
+  entryPoints: [path.join(rootDir, 'src/entries/background.js')],
+  bundle: true,
+  format: 'iife',
+  target: ['chrome109', 'firefox115'],
+  outfile: path.join(chromeDir, 'background.js'),
+  logLevel: 'silent'
+});
+
 const chromeBundle = await readFile(path.join(chromeDir, 'content-script.js'), 'utf8');
 await writeFile(path.join(firefoxDir, 'content-script.js'), chromeBundle, 'utf8');
+const backgroundBundle = await readFile(path.join(chromeDir, 'background.js'), 'utf8');
+await writeFile(path.join(firefoxDir, 'background.js'), backgroundBundle, 'utf8');
+
 
 await writeFile(
   path.join(chromeDir, 'manifest.json'),

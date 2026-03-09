@@ -70,9 +70,9 @@ export function resolveFinalFilename(fileNode, headers) {
   const contentType = headers.get('content-type') || '';
   const cdName = decodeContentDispositionFilename(contentDisposition);
 
-  const iconExt = getExtFromIconClass(fileNode.iconClass);
   const mimeExt = getExtFromMime(contentType);
-  const fallbackExt = iconExt || mimeExt || '';
+  const iconExt = getExtFromIconClass(fileNode.iconClass);
+  const fallbackExt = mimeExt || iconExt || '';
 
   let finalName = cdName || fileNode.name || '未命名';
   finalName = sanitizeName(finalName);

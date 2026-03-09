@@ -20,6 +20,7 @@ export const ICON_EXT_MAP = {
   ico_bmp: '.bmp',
   ico_mp3: '.mp3',
   ico_mp4: '.mp4',
+  ico_video: '.mp4',
   ico_wav: '.wav',
   ico_avi: '.avi',
   ico_mkv: '.mkv',
@@ -59,6 +60,7 @@ export const MIME_EXT_MAP = {
   'image/bmp': '.bmp',
   'audio/mpeg': '.mp3',
   'audio/wav': '.wav',
+  'video/mpeg': '.mpeg',
   'video/mp4': '.mp4',
   'video/x-msvideo': '.avi',
   'video/x-matroska': '.mkv'

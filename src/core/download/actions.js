@@ -228,6 +228,74 @@ export function createDownloadActions({
     updateProgress(`完成：已创建 ${selectedFiles.length} 个下载任务（浏览器若支持会按目录结构保存）`, 100);
   }
 
+  function getRuntimeAPI() {
+    if (typeof browser !== 'undefined' && browser && browser.runtime && browser.runtime.sendMessage) {
+      return browser;
+    }
+    if (typeof chrome !== 'undefined' && chrome && chrome.runtime && chrome.runtime.sendMessage) {
+      return chrome;
+    }
+    return null;
+  }
+
+  function getExtensionRelativeDownloadSupport() {
+    const runtimeApi = getRuntimeAPI();
+    if (!runtimeApi || !runtimeApi.runtime || !runtimeApi.runtime.id) return null;
+    return runtimeApi;
+  }
+
+  function sendRuntimeMessage(runtimeApi, message) {
+    if (typeof runtimeApi.runtime.sendMessage !== 'function') {
+      return Promise.reject(new Error('当前环境不支持扩展消息通信。'));
+    }
+
+    if (runtimeApi.runtime.sendMessage.length <= 1) {
+      return runtimeApi.runtime.sendMessage(message);
+    }
+
+    return new Promise((resolve, reject) => {
+      runtimeApi.runtime.sendMessage(message, response => {
+        const lastError = runtimeApi.runtime.lastError;
+        if (lastError) {
+          reject(new Error(lastError.message || String(lastError)));
+          return;
+        }
+        resolve(response);
+      });
+    });
+  }
+
+  async function fallbackExtensionRelativeDownload(selectedFiles) {
+    const runtimeApi = getExtensionRelativeDownloadSupport();
+    if (!runtimeApi) return false;
+
+    const usedRelativePaths = new Set();
+    const items = [];
+
+    for (let i = 0; i < selectedFiles.length; i++) {
+      const file = selectedFiles[i];
+      updateProgress(`准备下载任务：${file.name}（${i + 1}/${selectedFiles.length}）`, (i / selectedFiles.length) * 100);
+      const finalName = resolveFinalFilename(file, new Headers());
+      const { relativePath } = makeUniqueRelativePath(file.pathSegments, finalName, usedRelativePaths);
+      items.push({
+        url: file.downloadUrl,
+        filename: relativePath || sanitizeName(finalName) || 'download.bin'
+      });
+    }
+
+    const response = await sendRuntimeMessage(runtimeApi, {
+      type: 'theol-download-relative-paths',
+      items
+    });
+
+    if (!response || !response.ok) {
+      throw new Error((response && response.error) || '扩展后台未能创建下载任务。');
+    }
+
+    updateProgress(`完成：已创建 ${selectedFiles.length} 个下载任务，文件将按目录结构保存到浏览器默认下载目录`, 100);
+    return true;
+  }
+
   async function getOrCreateSubdir(dirHandle, folderName) {
     return dirHandle.getDirectoryHandle(sanitizeName(folderName), { create: true });
   }
@@ -339,6 +407,11 @@ export function createDownloadActions({
     setActionButtonsDisabled(true);
 
     try {
+      const usedExtensionFallback = await fallbackExtensionRelativeDownload(selectedFiles);
+      if (usedExtensionFallback) {
+        return;
+      }
+
       if (!window.showDirectoryPicker) {
         updateProgress('浏览器不支持直接写入本地文件夹，改为自动逐个创建下载任务…', 0);
         await fallbackFlatDownload(selectedFiles);
