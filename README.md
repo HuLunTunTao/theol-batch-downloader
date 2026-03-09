@@ -122,6 +122,19 @@ npm install
 npm run build
 ```
 
+打包发布文件（本地）：
+
+```bash
+npm run package
+```
+
+输出目录 `release-assets/`：
+
+- `theol-batch-downloader-chrome-vx.y.z.zip`
+- `theol-batch-downloader-firefox-vx.y.z.zip`
+- `theol-batch-downloader-firefox-vx.y.z.xpi`
+- `theol-batch-downloader-vx.y.z.user.js`
+
 构建产物：
 
 - `dist/userscript/theol-batch-downloader.user.js`

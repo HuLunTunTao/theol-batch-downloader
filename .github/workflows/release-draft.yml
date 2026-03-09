@@ -25,16 +25,10 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Build
-        run: npm run build
-
       - name: Package release assets
-        run: |
-          TAG_NAME="${GITHUB_REF_NAME}"
-          mkdir -p release-assets
-          zip -r "release-assets/theol-batch-downloader-chrome-${TAG_NAME}.zip" dist/chrome
-          zip -r "release-assets/theol-batch-downloader-firefox-${TAG_NAME}.zip" dist/firefox
-          cp dist/userscript/theol-batch-downloader.user.js "release-assets/theol-batch-downloader-${TAG_NAME}.user.js"
+        env:
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: npm run package
 
       - name: Create draft release
         uses: softprops/action-gh-release@v2
@@ -43,4 +37,5 @@ jobs:
           generate_release_notes: true
           files: |
             release-assets/*.zip
+            release-assets/*.xpi
             release-assets/*.user.js
