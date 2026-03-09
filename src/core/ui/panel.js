@@ -23,9 +23,11 @@ export function createPanelController({
   }
 
   function updateProgress(text, percent = 0) {
-    const textEl = uiDocument.querySelector(`#${OVERLAY_ID} .theol-progress-text`);
+    const textEl = uiDocument.querySelector(`#${OVERLAY_ID} .theol-progress-text span:first-child`);
+    const percentEl = uiDocument.querySelector(`#${OVERLAY_ID} .theol-progress-percent`);
     const barEl = uiDocument.querySelector(`#${OVERLAY_ID} .theol-progress-bar`);
     if (textEl) textEl.textContent = text;
+    if (percentEl) percentEl.textContent = `${Math.floor(percent)}%`;
     if (barEl) barEl.style.width = `${Math.max(0, Math.min(100, percent))}%`;
   }
 
