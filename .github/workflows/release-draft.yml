@@ -5,6 +5,9 @@ on:
     tags:
       - "*"
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 permissions:
   contents: write
 
@@ -14,12 +17,12 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
-          node-version: 20
+          node-version: 24
           cache: npm
 
       - name: Install dependencies
@@ -28,14 +31,21 @@ jobs:
       - name: Package release assets
         env:
           RELEASE_TAG: ${{ github.ref_name }}
-        run: npm run package
+        run: |
+          npm run package
+          npm run package:source
+
+      - name: Verify packaged assets
+        run: |
+          test -d release-assets
+          find release-assets -maxdepth 1 -type f | sort
+          find release-assets -maxdepth 1 -type f | grep -q .
 
       - name: Create draft release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v2.5.0
         with:
           draft: true
           generate_release_notes: true
-          files: |
-            release-assets/*.zip
-            release-assets/*.xpi
-            release-assets/*.user.js
+          fail_on_unmatched_files: true
+          overwrite_files: true
+          files: release-assets/*
