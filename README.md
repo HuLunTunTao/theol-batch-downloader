@@ -140,12 +140,19 @@ npm run build
 npm run package
 ```
 
+打包 Firefox 审核用源码包：
+
+```bash
+npm run package:source
+```
+
 输出目录 `release-assets/`：
 
 - `theol-batch-downloader-chrome-vx.y.z.zip`
 - `theol-batch-downloader-firefox-vx.y.z.zip`
 - `theol-batch-downloader-firefox-vx.y.z.xpi`
 - `theol-batch-downloader-vx.y.z.user.js`
+- `theol-batch-downloader-source-vx.y.z.zip`
 
 构建产物：
 

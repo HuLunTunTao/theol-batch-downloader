@@ -1,4 +1,4 @@
-import JSZip from 'jszip';
+import JSZip from 'jszip/lib/index.js';
 
 export function createDownloadActions({
   uiDocument,

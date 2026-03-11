@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "build": "node build/build.mjs",
-    "package": "npm run build && node build/package.mjs"
+    "package": "npm run build && node build/package.mjs",
+    "package:source": "node build/package-source.mjs"
   },
   "dependencies": {
     "jszip": "^3.10.1"

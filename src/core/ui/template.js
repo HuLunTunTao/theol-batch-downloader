@@ -1,64 +1,218 @@
-export const OVERLAY_TEMPLATE_HTML = `
-  <div class="theol-modal">
-    <div class="theol-header">
-      <div class="theol-title-row">
-        <h2 class="theol-title">课程资源批量下载</h2>
-        <button type="button" class="theol-close" title="关闭">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-        </button>
-      </div>
-      <div class="theol-subtitle">自动递归目录、树状勾选、补全常见后缀、支持 ZIP 或按原目录结构保存到文件夹。</div>
-    </div>
+const SVG_NS = 'http://www.w3.org/2000/svg';
 
-    <div class="theol-toolbar">
-      <div class="left">
-        <button type="button" class="theol-btn secondary" data-action="select-all">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 11 12 14 22 4"></polyline><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg>
-          全选
-        </button>
-        <button type="button" class="theol-btn secondary" data-action="unselect-all">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect></svg>
-          清空
-        </button>
-        <button type="button" class="theol-btn secondary" data-action="expand-all">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="7 13 12 18 17 13"></polyline><polyline points="7 6 12 11 17 6"></polyline></svg>
-          展开全部
-        </button>
-        <button type="button" class="theol-btn secondary" data-action="collapse-all">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="7 11 12 6 17 11"></polyline><polyline points="7 18 12 13 17 18"></polyline></svg>
-          收起全部
-        </button>
-      </div>
-      <div class="right theol-summary"></div>
-    </div>
+function createElement(uiDocument, tagName, { className, textContent, attrs, style } = {}) {
+  const element = uiDocument.createElement(tagName);
+  if (className) element.className = className;
+  if (typeof textContent === 'string') element.textContent = textContent;
+  if (attrs) {
+    for (const [key, value] of Object.entries(attrs)) {
+      element.setAttribute(key, value);
+    }
+  }
+  if (style) {
+    Object.assign(element.style, style);
+  }
+  return element;
+}
 
-    <div class="theol-body">
-      <div class="theol-tree">
-        <div class="theol-empty">
-          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin: 0 auto 12px; display: block; opacity: 0.5;"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-          正在扫描课程资源，请稍候…
-        </div>
-      </div>
-    </div>
+function createSvg(uiDocument, width, height, viewBox, children, attrs = {}) {
+  const svg = uiDocument.createElementNS(SVG_NS, 'svg');
+  svg.setAttribute('width', String(width));
+  svg.setAttribute('height', String(height));
+  svg.setAttribute('viewBox', viewBox);
+  svg.setAttribute('fill', 'none');
+  svg.setAttribute('stroke', 'currentColor');
+  for (const [key, value] of Object.entries(attrs)) {
+    svg.setAttribute(key, value);
+  }
+  for (const child of children) {
+    svg.appendChild(child);
+  }
+  return svg;
+}
 
-    <div class="theol-footer">
-      <div style="display:flex;flex-wrap:wrap;gap:12px;justify-content:space-between;align-items:center;margin-bottom:16px;">
-        <div style="display:flex;flex-wrap:wrap;gap:10px;">
-          <button type="button" class="theol-btn primary" data-action="download-zip">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-            下载压缩包 ZIP
-          </button>
-          <button type="button" class="theol-btn ghost" data-action="download-folder">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path><line x1="12" y1="11" x2="12" y2="17"></line><line x1="9" y1="14" x2="15" y2="14"></line></svg>
-            下载到本地文件夹
-          </button>
-        </div>
-      </div>
-      <div class="theol-progress-text">
-        <span>等待操作…</span>
-        <span class="theol-progress-percent">0%</span>
-      </div>
-      <div class="theol-progress"><div class="theol-progress-bar"></div></div>
-    </div>
-  </div>
-`;
+function createSvgNode(uiDocument, tagName, attrs) {
+  const node = uiDocument.createElementNS(SVG_NS, tagName);
+  for (const [key, value] of Object.entries(attrs)) {
+    node.setAttribute(key, value);
+  }
+  return node;
+}
+
+function createButton(uiDocument, { className, action, text, title, svg }) {
+  const button = createElement(uiDocument, 'button', { className, attrs: { type: 'button' } });
+  if (action) button.dataset.action = action;
+  if (title) button.title = title;
+  if (svg) button.appendChild(svg);
+  if (text) button.append(` ${text}`);
+  return button;
+}
+
+export function createOverlayTemplate(uiDocument) {
+  const modal = createElement(uiDocument, 'div', { className: 'theol-modal' });
+
+  const header = createElement(uiDocument, 'div', { className: 'theol-header' });
+  const titleRow = createElement(uiDocument, 'div', { className: 'theol-title-row' });
+  const title = createElement(uiDocument, 'h2', { className: 'theol-title', textContent: '课程资源批量下载' });
+  const closeIcon = createSvg(uiDocument, 20, 20, '0 0 24 24', [
+    createSvgNode(uiDocument, 'line', { x1: '18', y1: '6', x2: '6', y2: '18' }),
+    createSvgNode(uiDocument, 'line', { x1: '6', y1: '6', x2: '18', y2: '18' })
+  ], {
+    'stroke-width': '2',
+    'stroke-linecap': 'round',
+    'stroke-linejoin': 'round'
+  });
+  const closeButton = createButton(uiDocument, {
+    className: 'theol-close',
+    title: '关闭',
+    svg: closeIcon
+  });
+  titleRow.append(title, closeButton);
+  header.appendChild(titleRow);
+  header.appendChild(createElement(uiDocument, 'div', {
+    className: 'theol-subtitle',
+    textContent: '自动递归目录、树状勾选、补全常见后缀、支持 ZIP 或按原目录结构保存到文件夹。'
+  }));
+
+  const toolbar = createElement(uiDocument, 'div', { className: 'theol-toolbar' });
+  const leftActions = createElement(uiDocument, 'div', { className: 'left' });
+  const summary = createElement(uiDocument, 'div', { className: 'right theol-summary' });
+  const toolbarButtons = [
+    {
+      action: 'select-all',
+      text: '全选',
+      svg: createSvg(uiDocument, 14, 14, '0 0 24 24', [
+        createSvgNode(uiDocument, 'polyline', { points: '9 11 12 14 22 4' }),
+        createSvgNode(uiDocument, 'path', { d: 'M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11' })
+      ], {
+        'stroke-width': '2',
+        'stroke-linecap': 'round',
+        'stroke-linejoin': 'round'
+      })
+    },
+    {
+      action: 'unselect-all',
+      text: '清空',
+      svg: createSvg(uiDocument, 14, 14, '0 0 24 24', [
+        createSvgNode(uiDocument, 'rect', { x: '3', y: '3', width: '18', height: '18', rx: '2', ry: '2' })
+      ], {
+        'stroke-width': '2',
+        'stroke-linecap': 'round',
+        'stroke-linejoin': 'round'
+      })
+    },
+    {
+      action: 'expand-all',
+      text: '展开全部',
+      svg: createSvg(uiDocument, 14, 14, '0 0 24 24', [
+        createSvgNode(uiDocument, 'polyline', { points: '7 13 12 18 17 13' }),
+        createSvgNode(uiDocument, 'polyline', { points: '7 6 12 11 17 6' })
+      ], {
+        'stroke-width': '2',
+        'stroke-linecap': 'round',
+        'stroke-linejoin': 'round'
+      })
+    },
+    {
+      action: 'collapse-all',
+      text: '收起全部',
+      svg: createSvg(uiDocument, 14, 14, '0 0 24 24', [
+        createSvgNode(uiDocument, 'polyline', { points: '7 11 12 6 17 11' }),
+        createSvgNode(uiDocument, 'polyline', { points: '7 18 12 13 17 18' })
+      ], {
+        'stroke-width': '2',
+        'stroke-linecap': 'round',
+        'stroke-linejoin': 'round'
+      })
+    }
+  ];
+  for (const config of toolbarButtons) {
+    leftActions.appendChild(createButton(uiDocument, {
+      className: 'theol-btn secondary',
+      action: config.action,
+      text: config.text,
+      svg: config.svg
+    }));
+  }
+  toolbar.append(leftActions, summary);
+
+  const body = createElement(uiDocument, 'div', { className: 'theol-body' });
+  const tree = createElement(uiDocument, 'div', { className: 'theol-tree' });
+  const empty = createElement(uiDocument, 'div', { className: 'theol-empty' });
+  empty.appendChild(createSvg(uiDocument, 32, 32, '0 0 24 24', [
+    createSvgNode(uiDocument, 'circle', { cx: '12', cy: '12', r: '10' }),
+    createSvgNode(uiDocument, 'polyline', { points: '12 6 12 12 16 14' })
+  ], {
+    'stroke-width': '1.5',
+    'stroke-linecap': 'round',
+    'stroke-linejoin': 'round'
+  }));
+  empty.firstChild.style.margin = '0 auto 12px';
+  empty.firstChild.style.display = 'block';
+  empty.firstChild.style.opacity = '0.5';
+  empty.append('正在扫描课程资源，请稍候…');
+  tree.appendChild(empty);
+  body.appendChild(tree);
+
+  const footer = createElement(uiDocument, 'div', { className: 'theol-footer' });
+  const footerTop = createElement(uiDocument, 'div', {
+    style: {
+      display: 'flex',
+      flexWrap: 'wrap',
+      gap: '12px',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: '16px'
+    }
+  });
+  const footerActions = createElement(uiDocument, 'div', {
+    style: {
+      display: 'flex',
+      flexWrap: 'wrap',
+      gap: '10px'
+    }
+  });
+  footerActions.append(
+    createButton(uiDocument, {
+      className: 'theol-btn primary',
+      action: 'download-zip',
+      text: '下载压缩包 ZIP',
+      svg: createSvg(uiDocument, 16, 16, '0 0 24 24', [
+        createSvgNode(uiDocument, 'path', { d: 'M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4' }),
+        createSvgNode(uiDocument, 'polyline', { points: '7 10 12 15 17 10' }),
+        createSvgNode(uiDocument, 'line', { x1: '12', y1: '15', x2: '12', y2: '3' })
+      ], {
+        'stroke-width': '2',
+        'stroke-linecap': 'round',
+        'stroke-linejoin': 'round'
+      })
+    }),
+    createButton(uiDocument, {
+      className: 'theol-btn ghost',
+      action: 'download-folder',
+      text: '下载到本地文件夹',
+      svg: createSvg(uiDocument, 16, 16, '0 0 24 24', [
+        createSvgNode(uiDocument, 'path', { d: 'M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z' }),
+        createSvgNode(uiDocument, 'line', { x1: '12', y1: '11', x2: '12', y2: '17' }),
+        createSvgNode(uiDocument, 'line', { x1: '9', y1: '14', x2: '15', y2: '14' })
+      ], {
+        'stroke-width': '2',
+        'stroke-linecap': 'round',
+        'stroke-linejoin': 'round'
+      })
+    })
+  );
+  footerTop.appendChild(footerActions);
+
+  const progressText = createElement(uiDocument, 'div', { className: 'theol-progress-text' });
+  progressText.append(
+    createElement(uiDocument, 'span', { textContent: '等待操作…' }),
+    createElement(uiDocument, 'span', { className: 'theol-progress-percent', textContent: '0%' })
+  );
+  const progress = createElement(uiDocument, 'div', { className: 'theol-progress' });
+  progress.appendChild(createElement(uiDocument, 'div', { className: 'theol-progress-bar' }));
+
+  footer.append(footerTop, progressText, progress);
+  modal.append(header, toolbar, body, footer);
+  return modal;
+}

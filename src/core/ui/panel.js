@@ -1,5 +1,5 @@
 import { OVERLAY_ID } from '../shared/constants';
-import { OVERLAY_TEMPLATE_HTML } from './template';
+import { createOverlayTemplate } from './template';
 
 export function createPanelController({
   uiDocument,
@@ -10,7 +10,6 @@ export function createPanelController({
   walkTree,
   getTreeSummary,
   getExtFromIconClass,
-  escapeHTML,
   isActionInProgress,
   onDownloadZip,
   onDownloadFolder
@@ -33,12 +32,25 @@ export function createPanelController({
     const summary = getTreeSummary(root);
     const summaryEl = uiDocument.querySelector(`#${OVERLAY_ID} .theol-summary`);
     if (!summaryEl) return;
+    summaryEl.replaceChildren(
+      makeTag(`目录 ${Math.max(0, summary.folders - 1)}`),
+      makeTag(`文件 ${summary.files}`),
+      makeTag(`已选 ${summary.selectedFiles}`)
+    );
+  }
 
-    summaryEl.innerHTML = `
-      <span class="theol-tag">目录 ${Math.max(0, summary.folders - 1)}</span>
-      <span class="theol-tag">文件 ${summary.files}</span>
-      <span class="theol-tag">已选 ${summary.selectedFiles}</span>
-    `;
+  function makeTag(text) {
+    const tag = uiDocument.createElement('span');
+    tag.className = 'theol-tag';
+    tag.textContent = text;
+    return tag;
+  }
+
+  function makeEmptyState(text) {
+    const empty = uiDocument.createElement('div');
+    empty.className = 'theol-empty';
+    empty.textContent = text;
+    return empty;
   }
 
   function syncCheckboxDOM(node) {
@@ -116,7 +128,7 @@ export function createPanelController({
 
     const name = uiDocument.createElement('span');
     name.className = 'theol-name';
-    name.innerHTML = escapeHTML(node.name);
+    name.textContent = node.name;
 
     const meta = uiDocument.createElement('span');
     meta.className = 'theol-meta';
@@ -147,9 +159,9 @@ export function createPanelController({
     const treeContainer = uiDocument.querySelector(`#${OVERLAY_ID} .theol-tree`);
     if (!treeContainer) return;
 
-    treeContainer.innerHTML = '';
+    treeContainer.replaceChildren();
     if (!root.children.length) {
-      treeContainer.innerHTML = '<div class="theol-empty">未扫描到任何资源。</div>';
+      treeContainer.appendChild(makeEmptyState('未扫描到任何资源。'));
       return;
     }
 
@@ -167,7 +179,7 @@ export function createPanelController({
 
     const overlay = uiDocument.createElement('div');
     overlay.id = OVERLAY_ID;
-    overlay.innerHTML = OVERLAY_TEMPLATE_HTML;
+    overlay.appendChild(createOverlayTemplate(uiDocument));
 
     overlay.querySelector('.theol-close').addEventListener('click', () => {
       if (isActionInProgress()) return;
@@ -234,7 +246,7 @@ export function createPanelController({
   function showScanError(errorText) {
     const tree = uiDocument.querySelector(`#${OVERLAY_ID} .theol-tree`);
     if (!tree) return;
-    tree.innerHTML = `<div class="theol-empty">扫描失败：${escapeHTML(errorText)}</div>`;
+    tree.replaceChildren(makeEmptyState(`扫描失败：${errorText}`));
   }
 
   return {
