@@ -1,4 +1,5 @@
 import JSZip from 'jszip/lib/index.js';
+import { parseHTML } from '../shared/helpers';
 
 export function createDownloadActions({
   uiDocument,
@@ -13,13 +14,93 @@ export function createDownloadActions({
   sanitizeName,
   sleep
 }) {
+  async function fetchTextDocument(url) {
+    const res = await fetch(url, { credentials: 'include' });
+    if (!res.ok) {
+      throw new Error(`页面请求失败：${res.status} ${res.statusText}`);
+    }
+    const buffer = await res.arrayBuffer();
+    return new TextDecoder('gbk').decode(buffer);
+  }
+
+  function extractOfficialDownloadUrl(fileNode, previewDoc, previewUrl) {
+    const directLink = previewDoc.querySelector("a[href*='/meol/common/script/download.jsp']");
+    if (directLink) {
+      const href = directLink.getAttribute('href') || '';
+      if (href) return new URL(href, previewUrl).href;
+    }
+
+    const scripts = Array.from(previewDoc.querySelectorAll('script'));
+    const previewScript = scripts
+      .map(script => script.textContent || '')
+      .find(text => text.includes('/meol/analytics/resPdfShow.do'));
+
+    if (previewScript) {
+      const match = previewScript.match(/encodeURIComponent\(\s*["']([^"']*\/meol\/analytics\/resPdfShow\.do\?[^"']+)["']\s*\)/i);
+      if (match && match[1]) {
+        return new URL(match[1], previewUrl).href;
+      }
+    }
+
+    if (fileNode.downloadUrl) return fileNode.downloadUrl;
+    throw new Error(`${fileNode.name} 未找到官方下载地址。`);
+  }
+
+  async function resolveOfficialDownloadUrl(fileNode) {
+    if (fileNode.officialDownloadUrl) return fileNode.officialDownloadUrl;
+    if (!fileNode.previewUrl) {
+      fileNode.officialDownloadUrl = fileNode.downloadUrl;
+      return fileNode.officialDownloadUrl;
+    }
+
+    const previewHtml = await fetchTextDocument(fileNode.previewUrl);
+    const previewDoc = parseHTML(previewHtml);
+    const officialUrl = extractOfficialDownloadUrl(fileNode, previewDoc, fileNode.previewUrl);
+    fileNode.officialDownloadUrl = officialUrl;
+    return officialUrl;
+  }
+
+  function isPdfLikeFile(fileNode, finalName, headers) {
+    const contentType = (headers.get('content-type') || '').toLowerCase();
+    return /\.pdf$/i.test(finalName || '')
+      || /\.pdf$/i.test(fileNode.name || '')
+      || fileNode.iconClass.includes('ico_pdf')
+      || contentType.includes('application/pdf');
+  }
+
+  async function readBlobHeadText(blob, length = 512) {
+    const headBuffer = await blob.slice(0, length).arrayBuffer();
+    return new TextDecoder('utf-8', { fatal: false }).decode(headBuffer).trimStart();
+  }
+
+  async function validateDownloadedBlob(fileNode, blob, finalName, headers) {
+    const contentType = (headers.get('content-type') || '').toLowerCase();
+    const headText = await readBlobHeadText(blob);
+
+    if (isPdfLikeFile(fileNode, finalName, headers)) {
+      if (!headText.startsWith('%PDF-')) {
+        throw new Error(`${finalName} 下载内容不是有效 PDF，可能返回了登录页或错误页。`);
+      }
+      return;
+    }
+
+    const looksLikeHtml = /^<(?:!doctype\s+html|html\b|head\b|body\b|script\b)/i.test(headText);
+    const looksLikeErrorPage = /(登录|login|统一身份认证|error|异常|未找到|404|403)/i.test(headText.slice(0, 300));
+
+    if (contentType.includes('text/html') || (looksLikeHtml && looksLikeErrorPage)) {
+      throw new Error(`${finalName} 下载内容是网页而不是文件，可能登录已失效或资源链接不可用。`);
+    }
+  }
+
   async function fetchFileBlobAndName(fileNode) {
-    const res = await fetch(fileNode.downloadUrl, { credentials: 'include' });
+    const downloadUrl = await resolveOfficialDownloadUrl(fileNode);
+    const res = await fetch(downloadUrl, { credentials: 'include' });
     if (!res.ok) {
       throw new Error(`${fileNode.name} 下载失败：${res.status} ${res.statusText}`);
     }
     const blob = await res.blob();
     const finalName = resolveFinalFilename(fileNode, res.headers);
+    await validateDownloadedBlob(fileNode, blob, finalName, res.headers);
     return { blob, finalName };
   }
 
@@ -100,8 +181,10 @@ export function createDownloadActions({
   }
 
   async function fetchFileSize(fileNode) {
+    const downloadUrl = await resolveOfficialDownloadUrl(fileNode);
+
     try {
-      const headRes = await fetch(fileNode.downloadUrl, {
+      const headRes = await fetch(downloadUrl, {
         method: 'HEAD',
         credentials: 'include'
       });
@@ -114,7 +197,7 @@ export function createDownloadActions({
     }
 
     try {
-      const rangeRes = await fetch(fileNode.downloadUrl, {
+      const rangeRes = await fetch(downloadUrl, {
         method: 'GET',
         credentials: 'include',
         headers: {
@@ -244,56 +327,13 @@ export function createDownloadActions({
     return runtimeApi;
   }
 
-  function sendRuntimeMessage(runtimeApi, message) {
-    if (typeof runtimeApi.runtime.sendMessage !== 'function') {
-      return Promise.reject(new Error('当前环境不支持扩展消息通信。'));
-    }
-
-    if (runtimeApi.runtime.sendMessage.length <= 1) {
-      return runtimeApi.runtime.sendMessage(message);
-    }
-
-    return new Promise((resolve, reject) => {
-      runtimeApi.runtime.sendMessage(message, response => {
-        const lastError = runtimeApi.runtime.lastError;
-        if (lastError) {
-          reject(new Error(lastError.message || String(lastError)));
-          return;
-        }
-        resolve(response);
-      });
-    });
-  }
-
   async function fallbackExtensionRelativeDownload(selectedFiles) {
     const runtimeApi = getExtensionRelativeDownloadSupport();
     if (!runtimeApi) return false;
 
-    const usedRelativePaths = new Set();
-    const items = [];
-
-    for (let i = 0; i < selectedFiles.length; i++) {
-      const file = selectedFiles[i];
-      updateProgress(`准备下载任务：${file.name}（${i + 1}/${selectedFiles.length}）`, (i / selectedFiles.length) * 100);
-      const finalName = resolveFinalFilename(file, new Headers());
-      const { relativePath } = makeUniqueRelativePath(file.pathSegments, finalName, usedRelativePaths);
-      items.push({
-        url: file.downloadUrl,
-        filename: relativePath || sanitizeName(finalName) || 'download.bin'
-      });
-    }
-
-    const response = await sendRuntimeMessage(runtimeApi, {
-      type: 'theol-download-relative-paths',
-      items
-    });
-
-    if (!response || !response.ok) {
-      throw new Error((response && response.error) || '扩展后台未能创建下载任务。');
-    }
-
-    updateProgress(`完成：已创建 ${selectedFiles.length} 个下载任务，文件将按目录结构保存到浏览器默认下载目录`, 100);
-    return true;
+    // Direct downloads API writes server responses straight to disk and cannot verify
+    // whether the payload is a real file or an HTML/login error page first.
+    return false;
   }
 
   async function getOrCreateSubdir(dirHandle, folderName) {

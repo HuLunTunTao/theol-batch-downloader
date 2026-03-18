@@ -25,7 +25,7 @@ function makeFolderNode(name, pathSegments = [], url = '') {
   };
 }
 
-function makeFileNode({ name, pathSegments, downloadUrl, iconClass, fileid, resid, lid }) {
+function makeFileNode({ name, pathSegments, previewUrl, downloadUrl, iconClass, fileid, resid, lid }) {
   let finalName = sanitizeName(name);
   const ext = getExtFromIconClass(iconClass);
   if (!hasExtension(finalName) && ext) {
@@ -36,6 +36,7 @@ function makeFileNode({ name, pathSegments, downloadUrl, iconClass, fileid, resi
     name: finalName,
     originalName: sanitizeName(name),
     pathSegments,
+    previewUrl,
     downloadUrl,
     iconClass,
     fileid,
@@ -122,6 +123,7 @@ function parseRowAsFile(tr, pageUrl, activeResourceOrigin) {
 
   return {
     name: fileLink.textContent.trim() || '未命名',
+    previewUrl: urlObj.href,
     downloadUrl,
     iconClass,
     fileid,
